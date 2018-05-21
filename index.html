@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>タイトル</title>
+    <link heref="css/reset.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="header">
+      <h2>賭けサイト</h2>
+      <p class="login" id="login">ログイン</p>
+      <p id="signup">signup</p>
+    </div>
+    <div class="output">
+      <p class="plus" id="plus">新規賭けページを作る</p>
+      <h3>BET可能一覧</h3>
+      <div class="output-content"></div>
+    </div>
+    <div class="insert-content" id="insert-content">
+      <div class="setup-bet">
+        <form name="form">
+          <h3>新規Bet作成画面</h3>
+          <p class="discription">新規BETのタイトルと説明とBET可能期間を入力してください</p>
+          <p class="title">タイトル</p>
+          <input class="title-input" id="title_input" type="text" name="title">
+          <p class="target-name">対象名</p>
+          <input class="target" id="target" type="text" name="target">
+          <div class="aiueo"> 
+            <p class="target-discription">※入力が終わりましたら、ENTERを押すと下に追加されます。全ての入力が終わったら完了ボタンを押してください</p>
+            <div class="input-finish">完了</div>
+          </div>
+          <div class="target-out"></div>
+        </form>
+      </div>
+    </div>
+    <div class="bet-window">
+      <div class="bet-contents-wrapper">
+        <div class="bet-contents">
+          <h1 class="bet-title"> </h1>
+          <form class="bet-target"></form>
+        </div>
+      </div>
+    </div>
+    <div class="signup-window" id="signup_window">
+      <p>ID
+        <input id="id_name" type="text" placeholder="idを入力してください">
+      </p>
+      <p>password
+        <input id="password" type="text" placeholder="パスワードを入力してください">
+      </p>
+      <button id="in">signup</button>
+      <p class="chuui">※パスワードは1234やaiueoなど簡易的なものをご使用ください</p>
+    </div>
+    <div class="login-window" id="login_window">
+      <p>ID
+        <input id="id" type="text" placeholder="idを入力してください">
+      </p>
+      <p>password
+        <input id="pass" type="text" placeholder="パスワードを入力してください">
+      </p>
+      <button id="log_in">ログイン</button>
+    </div><script src="https://www.gstatic.com/firebasejs/5.0.3/firebase.js"></script>
+    <script src="./js/jquery-2.1.3.min.js"></script>
+    <script src="./js/aiueo.js"></script>
+  </body>
+</html>

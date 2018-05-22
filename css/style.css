@@ -10,6 +10,8 @@
     color: #e48888; }
   .header .signup {
     margin-left: 800px; }
+  .header .acount {
+    color: #bd0dc5; }
 
 .output {
   max-width: 1080px;
@@ -113,14 +115,16 @@
     .bet-window .bet-contents-wrapper .bet-contents {
       padding: 30px 8px;
       width: 610px; }
-    .bet-window .bet-contents-wrapper .bet-target label {
-      display: block;
-      margin-top: 10px;
-      border-bottom: 1px solid #DDDFE2; }
-    .bet-window .bet-contents-wrapper .bet-target input {
-      margin-left: 20px;
-      margin-bottom: 30px;
-      padding: 13px; }
+    .bet-window .bet-contents-wrapper .target-wrapper {
+      border-bottom: 1px solid #0000002b;
+      margin-bottom: 20px; }
+      .bet-window .bet-contents-wrapper .target-wrapper label {
+        display: block;
+        margin-top: 10px; }
+      .bet-window .bet-contents-wrapper .target-wrapper .target-name {
+        margin-left: 20px; }
+      .bet-window .bet-contents-wrapper .target-wrapper .bet-coin {
+        margin-left: 20px; }
 
 .signup-window {
   display: none;

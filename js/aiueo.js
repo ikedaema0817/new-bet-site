@@ -1,4 +1,6 @@
+//ルールhasCoinをグローバルで定義しない（あとで）
 let betroom;
+let hasCoin;
 
 //firebase
 // Initialize Firebase
@@ -57,7 +59,28 @@ window.onload = function(){
     let roomName = v.betroom;
     const str = "<p class='output-contents'>"+ roomName +"<p>";
 
-    $(".output-content").append(str);
+  $(".output-content").append(str);
+
+
+
+//ブラウザをロードした時、ログインしていたら（ローカルストレージにログインした形跡があったらログインとsignupボタンを非表示、コインを表示）
+  //trueはローカルストレージに入っているので論理式ではなく文字列として表記
+  if(localStorage.getItem("login") == "true"){
+    $("#signup").hide();
+    $("#login").hide();
+    //coin数を定義（セキュリティ的にそれでいいのか？）ユーザーネームはローカルストレージから取得。。。あとで改善するかも
+    const userName = localStorage.getItem("name");
+    newPostRef.ref(userName).on("child_added", function(data){
+      hasCoin = data.val().coin;
+      //#acountを表しユーザーネームとcoin数を表記
+      const ID = document.getElementById("acount")
+      //間隔が開かない・・・・あとで
+      ID.innerText = "ID:" + " " + userName + " " + " " + "所持コイン数:"+ " " + hasCoin;
+      $("#acount").show();
+    })
+    
+  }
+    
   })
 }
 
@@ -67,7 +90,8 @@ $("body").on("click", ".output-contents", function(){
   h1.append(t);
   newPostRef.ref(t).on("child_added", function (data) {
   const v = data.val();
-  $(".bet-target").append("<label class='target'><input type='radio' name='bet'>"+ v.target +"</label>");
+  $(".bet-target").append("<div class='target-wrapper'><p>"+ v.target 
+  +"</p><input class='bet-coin' id='bet_coin' type='number' placeholder='何coinBETする？'>" + "<button type='button' onClick='betOn()'>BET</button></div>");
   $(".bet-window").show();
   })
 })
@@ -104,7 +128,7 @@ $("#log_in").on("click", ()=>{
   newPostRef.ref(userName).on("child_added", function(data){
     if(passWord == data.val().password){ 
       localStorage.setItem("name", userName);
-      localStorage.setItem("login", "true");
+      localStorage.setItem("login", true);
       alert("ログインしました");
       location.reload();
     } else {
@@ -115,4 +139,25 @@ $("#log_in").on("click", ()=>{
   })
 })
 
-//ブラウザをロードした時、ログインしていたら（ローカルストレージにログインした形跡があったらコインと）
+//BETボタンを押した時の処理
+function betOn(){
+  //confirmで承認したら,BET実行
+  if(window.confirm($("#bet_coin").val()+ "coinをBETしますか？")){
+    const userName = localStorage.getItem("name");
+    //一旦読みだして変数に代入
+    newPostRef.ref(userName).on("child_added", function(data){
+      hasCoin = data.val().coin;
+      hasCoin -= $("#bet_coin").val();
+      //コイン数を読み込んで引き算して再代入
+      newPostRef.ref(userName).set({
+        coin: hasCoin
+      }) 
+    })
+    
+  }else{
+    window.alert('キャンセルされました');
+  }
+}
+
+  
+

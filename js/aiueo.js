@@ -87,12 +87,32 @@ $("#in").on("click", function(){
     password: passWord,
     coin: 100
   })
-  localStorage.setItem("name", userName);
-  localStorage.setItem("login", "true")
+  //これも改善の余地があるだろう
+  alert("アカウントを登録しました。上の「ログイン」からログインしてください")
+  $("#signup_window").hide();
 })
 
-//ログイン
+//ログインあとでpromissを付け加えます
 $("#login").on("click", function(){
   $("#login_window").show();
-  
 })
+
+//今はアラートでログインを表現しているが改善の余地があるだろう
+$("#log_in").on("click", ()=>{
+  const userName = $("#id").val();
+  const passWord = $("#pass").val();
+  newPostRef.ref(userName).on("child_added", function(data){
+    if(passWord == data.val().password){ 
+      localStorage.setItem("name", userName);
+      localStorage.setItem("login", "true");
+      alert("ログインしました");
+      location.reload();
+    } else {
+      alert("ログインに失敗しました。IDかパスワードが間違っている可能性があります")
+      $("#login_window").hide();
+      return;
+    }
+  })
+})
+
+//ブラウザをロードした時、ログインしていたら（ローカルストレージにログインした形跡があったらコインと）

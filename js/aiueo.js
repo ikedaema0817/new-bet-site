@@ -1,6 +1,7 @@
 //ルールhasCoinをグローバルで定義しない（あとで）
 let betroom;
 let hasCoin;
+let targetName;
 
 //firebase
 // Initialize Firebase
@@ -30,16 +31,33 @@ $("#target").keypress((e) => {
     }
     
     betroom = document.form.title.value;
+
+    //targetのテキストをひな
+    const tText = document.form.target.value;
     
     let targetText = document.createElement("p");
     targetText.className = "target-text";
-    targetText.innerHTML = document.form.target.value;
+    targetText.innerHTML = tText;
     // MSG送信
     betroom = document.form.title.value;
-    console.log(betroom);
-    newPostRef.ref(betroom).push({
-      target: document.form.target.value
-    });
+
+    //targetをPUSH
+    // newPostRef.ref(betroom+"/"+tText+"/").push({
+      // console.log(newPostRef.ref(betroom+"/"))
+
+      //中村さんのメソッド
+    // newPostRef.ref(betroom+"/"+tText + '/').set(0)
+    //   // tText = {
+    //   //   target: document.form.target.value,
+    //   //   coin: 0
+    //   // }
+
+    //   //ここ！
+
+    //   tText: 0,
+    // });
+
+    
     document.form.target.value = "";
     $(".target-out").after(targetText);
   }
@@ -60,8 +78,7 @@ window.onload = function(){
     const str = "<p class='output-contents'>"+ roomName +"<p>";
 
   $(".output-content").append(str);
-
-
+  console.log("test");
 
 //ブラウザをロードした時、ログインしていたら（ローカルストレージにログインした形跡があったらログインとsignupボタンを非表示、コインを表示）
   //trueはローカルストレージに入っているので論理式ではなく文字列として表記
@@ -74,6 +91,7 @@ window.onload = function(){
       hasCoin = data.val().coin;
       //#acountを表しユーザーネームとcoin数を表記
       const ID = document.getElementById("acount")
+      console.log("test");
       //間隔が開かない・・・・あとで
       ID.innerText = "ID:" + " " + userName + " " + " " + "所持コイン数:"+ " " + hasCoin;
       $("#acount").show();
@@ -84,18 +102,27 @@ window.onload = function(){
   })
 }
 
+//ホームページから賭けのタイトルをクリックした時の処理
 $("body").on("click", ".output-contents", function(){
   const t = this.innerText;
+  //betOnのために変数に賭けのタイトルを格納しておく//格納されてないかと思ったら格納されていた//promise化したい
+  betroom = t;
   const h1 = $(".bet-title");
   h1.append(t);
-  newPostRef.ref(t).on("child_added", function (data) {
-  const v = data.val();
-  $(".bet-target").append("<div class='target-wrapper'><p>"+ v.target 
-  +"</p><input class='bet-coin' id='bet_coin' type='number' placeholder='何coinBETする？'>" + "<button type='button' onClick='betOn()'>BET</button></div>");
-  $(".bet-window").show();
-  })
+  load();
+  newPostRef.ref(betroom+"/").on("child_added", function (data) {
+    const v = data.val();
+    const k = data.key;
+    console.log(k);
+    console.log(v);
+    //ここ！
+    $(".bet-target").append("<div class='target-wrapper'><p>"+ k
+    +"</p><input class='bet-coin' id='bet_coin' type='number' placeholder='何coinBETする？'><input class='subButton' type='button' value='bet' data-target="+k+"></div><p class='bet-count' id='bet_count'>"+v+"</p><p id='odds' class='odds'></p>");
+    $(".bet-window").show();
+  });
+  setTimeout(
+    function(){load()}, 1000)
 })
-
 //signupきのう
 $("#signup").on("click", function(){
   $("#signup_window").show();
@@ -140,24 +167,53 @@ $("#log_in").on("click", ()=>{
 })
 
 //BETボタンを押した時の処理
-function betOn(){
+ function betOn(kind){
+  console.log(kind);
+
+  console.log(betroom);
+  //targetNameを定義
+  const targetName = kind;
   //confirmで承認したら,BET実行
   if(window.confirm($("#bet_coin").val()+ "coinをBETしますか？")){
+    //ここで賭け対象名を代入しておく
     const userName = localStorage.getItem("name");
     //一旦読みだして変数に代入
     newPostRef.ref(userName).on("child_added", function(data){
       hasCoin = data.val().coin;
+      
       hasCoin -= $("#bet_coin").val();
-      //コイン数を読み込んで引き算して再代入
-      newPostRef.ref(userName).set({
-        coin: hasCoin
-      }) 
+      let key = data.key;
+      let data_new = {
+        coin: hasCoin,
+        password: data.val().password,
+        username: data.val().username
+      };
+      data_new["coin"] = hasCoin;
+
+      // Write the new post's data simultaneously in the posts list and the user's post list.
+      var updates = {};
+      updates[userName + "/" + key ] = data_new;
+      return firebase.database().ref().update(updates);
+    })
+    //総BET数に追加//room名をクリックした時にすでに変数にルーム名を格納しておく、そして賭け対象名をクリックした時、それを変数に代入、ルーム名/賭け対象名/に格納
+    newPostRef.ref(betroom+"/"+targetName).on("child_added", function(data){
+      console.log(data);
     })
     
   }else{
     window.alert('キャンセルされました');
   }
 }
+
+
+//押した値を取るためのコールバック〜betOnへ
+function load() {
+  $(".subButton").on("click", function(){
+    var kind = $(this).attr("data-target");
+    betOn(kind);
+  })
+}
+
 
   
 

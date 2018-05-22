@@ -44,9 +44,7 @@ $("#target").keypress((e) => {
     //targetをPUSH
     // newPostRef.ref(betroom+"/"+tText+"/").push({
       // console.log(newPostRef.ref(betroom+"/"))
-
-      //中村さんのメソッド
-    // newPostRef.ref(betroom+"/"+tText + '/').set(0)
+    newPostRef.ref(betroom+"/"+tText + '/').set(0)
     //   // tText = {
     //   //   target: document.form.target.value,
     //   //   coin: 0

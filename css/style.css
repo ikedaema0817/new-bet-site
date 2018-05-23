@@ -125,11 +125,14 @@
         margin-left: 20px; }
       .bet-window .bet-contents-wrapper .target-wrapper .bet-coin {
         margin-left: 20px; }
-      .bet-window .bet-contents-wrapper .target-wrapper .bet-count {
-        display: inline-block;
-        margin-left: 20px; }
-      .bet-window .bet-contents-wrapper .target-wrapper .odds {
-        display: inline-block; }
+
+.bet-count {
+  display: inline;
+  margin-left: 20px; }
+
+.odds {
+  display: inline;
+  margin-left: 20px; }
 
 .signup-window {
   display: none;

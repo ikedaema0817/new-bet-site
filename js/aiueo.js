@@ -2,6 +2,10 @@
 let betroom;
 let hasCoin;
 let targetName;
+let coinCount;
+let betCoin;
+//変数allCountこれはルームのターゲットのコインを全て足した変数
+let allCount =0;
 
 //firebase
 // Initialize Firebase
@@ -76,7 +80,6 @@ window.onload = function(){
     const str = "<p class='output-contents'>"+ roomName +"<p>";
 
   $(".output-content").append(str);
-  console.log("test");
 
 //ブラウザをロードした時、ログインしていたら（ローカルストレージにログインした形跡があったらログインとsignupボタンを非表示、コインを表示）
   //trueはローカルストレージに入っているので論理式ではなく文字列として表記
@@ -102,24 +105,36 @@ window.onload = function(){
 
 //ホームページから賭けのタイトルをクリックした時の処理
 $("body").on("click", ".output-contents", function(){
+  //allCountを初期化
+  allCount = 0;
+
   const t = this.innerText;
   //betOnのために変数に賭けのタイトルを格納しておく//格納されてないかと思ったら格納されていた//promise化したい
   betroom = t;
   const h1 = $(".bet-title");
   h1.append(t);
-  load();
   newPostRef.ref(betroom+"/").on("child_added", function (data) {
     const v = data.val();
     const k = data.key;
-    console.log(k);
     console.log(v);
-    //ここ！
-    $(".bet-target").append("<div class='target-wrapper'><p>"+ k
-    +"</p><input class='bet-coin' id='bet_coin' type='number' placeholder='何coinBETする？'><input class='subButton' type='button' value='bet' data-target="+k+"></div><p class='bet-count' id='bet_count'>"+v+"</p><p id='odds' class='odds'></p>");
-    $(".bet-window").show();
+    //オッズを求める！！！！
+    //まずはtargetの総bet数を全部たす
+    allCount += v;
+    console.log(allCount);
+  })
+
+  //最後にこれを実行すればいい計算
+  newPostRef.ref(betroom + "/").on("child_added", function (data) {
+    const v = data.val();
+    const k = data.key;
+  $(".bet-target").append("<div class='target-wrapper'><label><input name='target' type='radio' class='target-radio' id='target_radio'>" + k + "</label>" +
+    // <input class='bet-coin' id='bet_coin' type='number' placeholder='何coinBETする？'>
+    "<p class='bet-count' id='bet_count'>総BET枚数：" + v + "</p><p id='odds' class='odds'>倍率：</p></div>");
+  $(".bet-window").show();
   });
-  setTimeout(
-    function(){load()}, 1000)
+  
+  // setTimeout(
+  //   function(){load()}, 1000)
 })
 //signupきのう
 $("#signup").on("click", function(){
@@ -165,12 +180,13 @@ $("#log_in").on("click", ()=>{
 })
 
 //BETボタンを押した時の処理
- function betOn(kind){
-  console.log(kind);
-
-  console.log(betroom);
+//  function betOn(kind){
+  function betOn(){
+  
   //targetNameを定義
-  const targetName = kind;
+   const targetName = $("[name=target]:checked").parent("label").text();
+  // console.log(kind);
+  console.log(betroom);
   //confirmで承認したら,BET実行
   if(window.confirm($("#bet_coin").val()+ "coinをBETしますか？")){
     //ここで賭け対象名を代入しておく
@@ -178,8 +194,12 @@ $("#log_in").on("click", ()=>{
     //一旦読みだして変数に代入
     newPostRef.ref(userName).on("child_added", function(data){
       hasCoin = data.val().coin;
-      
-      hasCoin -= $("#bet_coin").val();
+
+      //$("#bet_coin").val()を数値化
+      betCoin = Number($("#bet_coin").val());
+      console.log(betCoin);
+
+      hasCoin -= betCoin;
       let key = data.key;
       let data_new = {
         coin: hasCoin,
@@ -194,8 +214,31 @@ $("#log_in").on("click", ()=>{
       return firebase.database().ref().update(updates);
     })
     //総BET数に追加//room名をクリックした時にすでに変数にルーム名を格納しておく、そして賭け対象名をクリックした時、それを変数に代入、ルーム名/賭け対象名/に格納
-    newPostRef.ref(betroom+"/"+targetName).on("child_added", function(data){
-      console.log(data);
+    newPostRef.ref(betroom+"/"+targetName).once("value", function(data){
+      console.log(data.key);
+      console.log(data.val());
+      //data.val()というオブジェクトから数値を取り出す
+      // const numCoin = Object.keys(data.val()).map((k) => {return data.val()[k]; });
+      // console.log(numCoin);
+      //
+      //betコイン数をtargetの値に追加
+      const coi = betCoin + data.val();
+      console.log(coi);
+      newPostRef.ref(betroom+"/").update({
+        [targetName] : coi
+      })
+
+      //targetのcoin数を一時避難
+      // var coi = data.val();
+      // console.log(coi);
+      //coiを数値化
+      // console.log(parseInt(coi, 10));
+      // coi = parseInt(coi, 10);
+      // coi += $("#bet_coin").val();
+      // console.log(coi);
+      // newPostRef.ref(betroom+"/"+targetName).update({
+      //   [targetName]: coi
+      // })
     })
     
   }else{
@@ -205,12 +248,14 @@ $("#log_in").on("click", ()=>{
 
 
 //押した値を取るためのコールバック〜betOnへ
-function load() {
-  $(".subButton").on("click", function(){
-    var kind = $(this).attr("data-target");
-    betOn(kind);
-  })
-}
+// function load() {
+//   $(".subButton").on("click", function(){
+//     var kind = $(this).attr("data-target");
+//     // betに入れたcoin数を定義
+//     coinCount = $("#bet_coin").val();
+//     betOn(kind);
+//   })
+// }
 
 
   

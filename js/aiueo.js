@@ -11,6 +11,7 @@ let allbet;
 let returnCoin;
 let targetAllbet;
 let idHasCoin;
+let nowDate;
 
 //firebase
 // Initialize Firebase
@@ -74,11 +75,19 @@ $(".input-finish").on("click", function () {
   newPostRef.ref("/room/"+betroom).update({
     betroom: betroom
   });
+  let date = Date.parse($("#my-form [name=kigen]").val());
+  console.log(date);
+  //firebaseに時間を送り込む
+  newPostRef.ref("/time/"+betroom).update({
+    time: date
+  });
   $("#insert-content").hide();
+  // location.reload();
 })
 
 //ブラウザロードしたら一覧読み込み
 window.onload = function () {
+  nowDate = Date.parse(new Date());
   //もし管理アカウントだったら新規ページ作成画面表示
   if(localStorage.getItem("name")== "ema"||"kei"||"ikeda"){
     $("#plus").show()
@@ -100,8 +109,7 @@ window.onload = function () {
       newPostRef.ref(userName).once("value", function (data) {
         hasCoin = data.val().coin;
         //#acountを表しユーザーネームとcoin数を表記
-        const ID = document.getElementById("acount")
-        console.log("test");
+        const ID = document.getElementById("acount");
         //間隔が開かない・・・・あとで
         ID.innerText = "ID:" + " " + userName + " " + " " + "所持コイン数:" + " " + hasCoin;
         $("#acount").show();
@@ -143,11 +151,26 @@ $("body").on("click", ".output-contents", function () {
       allcount: allCount
     })
 
+   
+
+
+
 
     for (let k in v) {
+      if(v[k] !== 0) {
+        var odds = allCount / v[k];
+
+      }else {
+        odds = 0
+      }
+
+      // console.log(odds);
+      // if(odds == infinity){
+      //   odds = 0;
+      // }
       $(".bet-target").append("<div class='target-wrapper'><label><input name='target' type='radio' class='target-radio' id='target_radio'>" + k + "</label>" +
         // <input class='bet-coin' id='bet_coin' type='number' placeholder='何coinBETする？'>
-        "<p class='bet-count' id='bet_count'>総BET枚数：" + v[k] + "</p><p id='odds' class='odds'>倍率：" + allCount / v[k] + "</p></div>");
+        "<p class='bet-count' id='bet_count'>総BET枚数：" + v[k] + "</p><p id='odds' class='odds'>倍率：" + odds+ "</p></div>");
       $(".bet-window").show();
     }
   })
@@ -212,6 +235,16 @@ $("#log_in").on("click", () => {
 //BETボタンを押した時の処理
 //  function betOn(kind){
 function betOn() {
+  //もしbetボタンを押した時期限を過ぎていたらエラー
+  newPostRef.ref("/time/"+betroom).once("value", function (data) {
+    console.log(data.val().time);
+    if(data.val().time < nowDate){
+      console.log("aiueo");
+      alert("BET可能期限を過ぎています");
+      return;
+    }
+  })
+  
    
 
   //confirmで承認したら,BET実行
@@ -252,7 +285,10 @@ function betOn() {
     newPostRef.ref(userName).once("value", function (data) {
       hasCoin = data.val().coin;
       console.log(hasCoin)
-
+      if(hasCoin < betCoin){
+        alert("BETするコインが所持コインを超えています");
+        return;
+      }
       //このアカウントが持っているコインを入れている
       hasCoin -= betCoin;
       console.log(hasCoin);
@@ -304,6 +340,7 @@ function betOn() {
   //   window.alert('キャンセルされました');
   // }
   alert(targetName + "にBETしました");
+  location.reload();
 }
 
 
@@ -320,11 +357,23 @@ function betOn() {
 
 //fixした時の処理
 function betFix() {
+
   //targetNameを定義
-  const targetName = $("[name=target]:checked").parent("label").text();
-  console.log(betroom);
-  console.log(targetName);
+  targetName = $("[name=target]:checked").parent("label").text();
+  newPostRef.ref("/betlog/" + betroom).on("child_added", function (data) {
+    if(data.targetName == undefined){
+      // delete処理
+      newPostRef.ref("/betlog/" + betroom).remove();
+      newPostRef.ref("/allcount/" + betroom).remove();
+      newPostRef.ref("/room/"+betroom).remove();
+      newPostRef.ref(betroom).remove();
+      console.log("test");
+      location.reload();
+    }
+  })
+  
   newPostRef.ref("/betlog/" + betroom + "/" + targetName + "/").on("child_added", function (data) {
+    console.log(data);
     var obj = data.val();
     
     // for (let k in obj) {
@@ -340,7 +389,6 @@ function betFix() {
       newPostRef.ref(id).once("value", function (data) {
         //該当idの所持coin
         idHasCoin = data.val().coin;
-        resolve("test1");
 
       })
     });
@@ -348,7 +396,6 @@ function betFix() {
     const func2 = new Promise(function(resolve,reject){
       newPostRef.ref("/allcount/"+betroom).once("value", function (data) {
         allbet = data.val().allcount;
-        resolve("test2");
       })
     });
 
@@ -381,7 +428,9 @@ function betFix() {
       newPostRef.ref("/betlog/" + betroom).remove();
       newPostRef.ref("/allcount/" + betroom).remove();
       newPostRef.ref("/room/"+betroom).remove();
+      newPostRef.ref(betroom).remove();
       console.log("test");
+      location.reload();
     });
 
 

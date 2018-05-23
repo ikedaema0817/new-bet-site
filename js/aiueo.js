@@ -113,25 +113,35 @@ $("body").on("click", ".output-contents", function(){
   betroom = t;
   const h1 = $(".bet-title");
   h1.append(t);
-  newPostRef.ref(betroom+"/").on("child_added", function (data) {
+  newPostRef.ref(betroom+"/").once("value", function (data) {
     const v = data.val();
     const k = data.key;
     console.log(v);
     //オッズを求める！！！！
-    //まずはtargetの総bet数を全部たす
-    allCount += v;
-    console.log(allCount);
+    // console.log(Object.keys(v));
+    for(let k in v){
+      console.log(v[k])
+      allCount += v[k];
+      
+    }
+    console.log(allCount)
+    for(let k in v){
+    $(".bet-target").append("<div class='target-wrapper'><label><input name='target' type='radio' class='target-radio' id='target_radio'>" + k + "</label>" +
+    // <input class='bet-coin' id='bet_coin' type='number' placeholder='何coinBETする？'>
+    "<p class='bet-count' id='bet_count'>総BET枚数：" + v[k] + "</p><p id='odds' class='odds'>倍率："+allCount+"</p></div>");
+    $(".bet-window").show();
+    }
   })
 
   //最後にこれを実行すればいい計算
-  newPostRef.ref(betroom + "/").on("child_added", function (data) {
-    const v = data.val();
-    const k = data.key;
-  $(".bet-target").append("<div class='target-wrapper'><label><input name='target' type='radio' class='target-radio' id='target_radio'>" + k + "</label>" +
-    // <input class='bet-coin' id='bet_coin' type='number' placeholder='何coinBETする？'>
-    "<p class='bet-count' id='bet_count'>総BET枚数：" + v + "</p><p id='odds' class='odds'>倍率：</p></div>");
-  $(".bet-window").show();
-  });
+  // newPostRef.ref(betroom + "/").on("child_added", function (data) {
+  //   const v = data.val();
+  //   const k = data.key;
+  // $(".bet-target").append("<div class='target-wrapper'><label><input name='target' type='radio' class='target-radio' id='target_radio'>" + k + "</label>" +
+  //   // <input class='bet-coin' id='bet_coin' type='number' placeholder='何coinBETする？'>
+  //   "<p class='bet-count' id='bet_count'>総BET枚数：" + v + "</p><p id='odds' class='odds'>倍率："+allCount+"</p></div>");
+  // $(".bet-window").show();
+  // });
   
   // setTimeout(
   //   function(){load()}, 1000)

@@ -17,6 +17,7 @@
   max-width: 1080px;
   margin: auto; }
   .output .plus {
+    display: none;
     padding: 0 6px;
     background-color: #8be476;
     color: #fff;
@@ -133,6 +134,9 @@
 .odds {
   display: inline;
   margin-left: 20px; }
+
+.button-fix {
+  display: none; }
 
 .signup-window {
   display: none;

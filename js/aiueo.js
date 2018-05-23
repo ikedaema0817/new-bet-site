@@ -7,6 +7,10 @@ let betCoin;
 //変数allCountこれはルームのターゲットのコインを全て足した変数
 let allCount = 0;
 let betlogCoin;
+let allbet;
+let returnCoin;
+let targetAllbet;
+let idHasCoin;
 
 //firebase
 // Initialize Firebase
@@ -67,7 +71,7 @@ $("#target").keypress((e) => {
 })
 
 $(".input-finish").on("click", function () {
-  newPostRef.ref("/room/").push({
+  newPostRef.ref("/room/"+betroom).update({
     betroom: betroom
   });
   $("#insert-content").hide();
@@ -75,9 +79,13 @@ $(".input-finish").on("click", function () {
 
 //ブラウザロードしたら一覧読み込み
 window.onload = function () {
+  //もし管理アカウントだったら新規ページ作成画面表示
+  if(localStorage.getItem("name")== "ema"||"kei"||"ikeda"){
+    $("#plus").show()
+  }
   newPostRef.ref("room").on("child_added", function (data) {
-    const v = data.val()
-    let roomName = v.betroom;
+    const v = data.key
+    let roomName = v;
     const str = "<p class='output-contents'>" + roomName + "<p>";
 
     $(".output-content").append(str);
@@ -89,7 +97,7 @@ window.onload = function () {
       $("#login").hide();
       //coin数を定義（セキュリティ的にそれでいいのか？）ユーザーネームはローカルストレージから取得。。。あとで改善するかも
       const userName = localStorage.getItem("name");
-      newPostRef.ref(userName).on("child_added", function (data) {
+      newPostRef.ref(userName).once("value", function (data) {
         hasCoin = data.val().coin;
         //#acountを表しユーザーネームとcoin数を表記
         const ID = document.getElementById("acount")
@@ -106,6 +114,9 @@ window.onload = function () {
 
 //ホームページから賭けのタイトルをクリックした時の処理
 $("body").on("click", ".output-contents", function () {
+  if(localStorage.getItem("name")== "ema"||"kei"||"ikeda"){
+    $("#button_fix").show()
+  }
   //allCountを初期化
   allCount = 0;
 
@@ -125,11 +136,14 @@ $("body").on("click", ".output-contents", function () {
     // $(".bet-window").show();
     // }
     for (let k in v) {
-      console.log(v[k])
       allCount += v[k];
 
     }
-    console.log(allCount)
+    newPostRef.ref("/allcount/"+betroom).update({
+      allcount: allCount
+    })
+
+
     for (let k in v) {
       $(".bet-target").append("<div class='target-wrapper'><label><input name='target' type='radio' class='target-radio' id='target_radio'>" + k + "</label>" +
         // <input class='bet-coin' id='bet_coin' type='number' placeholder='何coinBETする？'>
@@ -161,7 +175,7 @@ $("#in").on("click", function () {
   const passWord = $("#password").val();
 
   //ログインあとでpromissを付け加えます
-  newPostRef.ref(userName).push({
+  newPostRef.ref(userName).update({
     username: userName,
     password: passWord,
     coin: 100
@@ -180,7 +194,8 @@ $("#login").on("click", function () {
 $("#log_in").on("click", () => {
   const userName = $("#id").val();
   const passWord = $("#pass").val();
-  newPostRef.ref(userName).on("child_added", function (data) {
+  newPostRef.ref(userName).once("value", function (data) {
+    console.log(data.val());
     if (passWord == data.val().password) {
       localStorage.setItem("name", userName);
       localStorage.setItem("login", true);
@@ -197,13 +212,14 @@ $("#log_in").on("click", () => {
 //BETボタンを押した時の処理
 //  function betOn(kind){
 function betOn() {
+   
 
-  //targetNameを定義
-  const targetName = $("[name=target]:checked").parent("label").text();
-  // console.log(kind);
-  console.log(betroom);
   //confirmで承認したら,BET実行
-  if (window.confirm($("#bet_coin").val() + "coinをBETしますか？")) {
+  // if (window.confirm($("#bet_coin").val() + "coinをBETしますか？")) {
+    //targetNameを定義
+    const targetName = $("[name=target]:checked").parent("label").text();
+    // console.log(kind);
+    console.log(betroom);
     //ここで賭け対象名を代入しておく
     const userName = localStorage.getItem("name");
     //$("#bet_coin").val()を数値化
@@ -233,22 +249,28 @@ function betOn() {
     })
 
     //一旦読みだして変数に代入
-    newPostRef.ref(userName).on("child_added", function (data) {
+    newPostRef.ref(userName).once("value", function (data) {
       hasCoin = data.val().coin;
+      console.log(hasCoin)
 
       //このアカウントが持っているコインを入れている
       hasCoin -= betCoin;
-      let key = data.key;
-      let data_new = {
-        coin: hasCoin,
-        password: data.val().password,
-        username: data.val().username
-      };
-      data_new["coin"] = hasCoin;
+      console.log(hasCoin);
 
-      var updates = {};
-      updates[userName + "/" + key] = data_new;
-      return firebase.database().ref().update(updates);
+      newPostRef.ref(userName).update({
+        coin: hasCoin
+      })
+      // let key = data.key;
+      // let data_new = {
+      //   coin: hasCoin,
+      //   password: data.val().password,
+      //   username: data.val().username
+      // };
+      // data_new["coin"] = hasCoin;
+
+      // var updates = {};
+      // updates[userName + "/" + key] = data_new;
+      // return firebase.database().ref().update(updates);
     })
     //総BET数に追加//room名をクリックした時にすでに変数にルーム名を格納しておく、そして賭け対象名をクリックした時、それを変数に代入、ルーム名/賭け対象名/に格納
     newPostRef.ref(betroom + "/" + targetName).once("value", function (data) {
@@ -278,9 +300,10 @@ function betOn() {
       // })
     })
 
-  } else {
-    window.alert('キャンセルされました');
-  }
+  // } else {
+  //   window.alert('キャンセルされました');
+  // }
+  alert(targetName + "にBETしました");
 }
 
 
@@ -301,22 +324,73 @@ function betFix() {
   const targetName = $("[name=target]:checked").parent("label").text();
   console.log(betroom);
   console.log(targetName);
-  newPostRef.ref("/betlog/" + betroom + "/" + targetName + "/").once("value", function (data) {
-    var obj = data.val()
-    for (let k in obj) {
-      //keiとbetlogCoinをだすコード
-      console.log(k, obj[k].betlogCoin)
-      var id = k;
-      var logCoin = obj[k].betlogCoin;
-    }
-    console.log(id);
-    console.log(logCoin);
+  newPostRef.ref("/betlog/" + betroom + "/" + targetName + "/").on("child_added", function (data) {
+    var obj = data.val();
+    
+    // for (let k in obj) {
+    //   //keiとbetlogCoinをだすコード
+    //   console.log(k, obj[k].betlogCoin)
+      var id = data.key;
+      var logCoin = data.val().betlogCoin;
+  // }  
+ console.log(logCoin);
 
     //idの所持コインを呼び出し代入
-    newPostRef.ref(id).once("value", function (data) {
-      console.log(data.val());
-      console.log(data.val().coin);
-    })
+    const func1 = new Promise(function(resolve,reject){
+      newPostRef.ref(id).once("value", function (data) {
+        //該当idの所持coin
+        idHasCoin = data.val().coin;
+        resolve("test1");
+
+      })
+    });
+      //該当の部屋の総BET数を記録
+    const func2 = new Promise(function(resolve,reject){
+      newPostRef.ref("/allcount/"+betroom).once("value", function (data) {
+        allbet = data.val().allcount;
+        resolve("test2");
+      })
+    });
+
+    const func3 = new Promise(function(resolve,reject){
+      newPostRef.ref(betroom+"/"+targetName).once("value", function(data){
+        targetAllbet = data.val();
+        resolve("test3");
+      })
+    });
+
+    Promise.all([func1,func2,func3]).then(function(){
+      //全てを数値化
+      logCoin = parseInt(logCoin, 10);
+      targetAllbet = parseInt(targetAllbet, 10);
+      allbet = parseInt(allbet, 10);
+      // console.log(logCoin);
+      // console.log(targetAllbet);
+      // console.log(allbet);
+      // console.log(idHasCoin)
+      //返すコインを求める
+      returnCoin = Math.ceil(logCoin * (allbet / targetAllbet));
+      console.log(returnCoin);
+      idHasCoin += returnCoin;
+
+      //idの所持コインに返す
+      newPostRef.ref(id).update({
+        coin: idHasCoin
+      })
+      // delete処理
+      newPostRef.ref("/betlog/" + betroom).remove();
+      newPostRef.ref("/allcount/" + betroom).remove();
+      newPostRef.ref("/room/"+betroom).remove();
+      console.log("test");
+    });
+
+
+
+
+
+
+   
+    
     // newPostRef.ref(betroom+"/").update({
     //   [id] : coi
     // })
